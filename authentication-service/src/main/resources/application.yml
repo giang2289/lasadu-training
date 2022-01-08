@@ -1,0 +1,63 @@
+
+
+app:
+  config:
+    keycloak:
+      uri: http://localhost:8180/auth/realms/microservices-realm
+      realm: microservices-realm
+      client-secret: 5d0b7186-74b0-47fc-ae04-a5de436376b9
+      client-id: spring-cloud-gateway-client
+      openid-uri: ${app.config.keycloak.uri}/protocol/openid-connect
+
+
+baseUrl: http://localhost:8080
+spring:
+  application:
+    name: authentication
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    oauth2:
+      client:
+        registration:
+          spring-cloud-gateway-client:
+            provider: keycloak
+            client-id: ${app.config.keycloak.client-id}
+            client-secret: ${app.config.keycloak.client-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: ${baseUrl}/login/oauth2/code/${app.config.keycloak.client-id}
+            scope: openid
+        provider:
+          keycloak:
+            token-uri: ${app.config.keycloak.openid-uri}/token
+            authorization-uri: ${app.config.keycloak.openid-uri}/auth
+            user-name-attribute: truonggiang
+            user-info-uri: ${app.config.keycloak.openid-uri}/userinfo
+            jwk-set-uri: ${app.config.keycloak.openid-uri}/certs
+            user-info-authentication-method: header
+            use-resource-role-mappings: true
+
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+
+server:
+  port: 8080
+
+
+
+logging:
+  level:
+    org.springframework.security: trace
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${random.uuid}
+    hostname: localhost
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    enabled: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

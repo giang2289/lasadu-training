@@ -1,0 +1,74 @@
+app:
+  config:
+    keycloak:
+      url: http://localhost:8180/auth
+      realm: microservices-realm
+      client-secret: 5d0b7186-74b0-47fc-ae04-a5de436376b9
+      client-id: spring-cloud-gateway-client
+spring:
+  application:
+    name: api-gateway
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            token-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/token
+            authorization-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/auth
+            user-name-attribute: truonggiang
+            user-info-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/userinfo
+            jwk-set-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/certs
+            user-info-authentication-method: header
+            use-resource-role-mappings: true
+        registration:
+          spring-cloud-gateway-client:
+            provider: keycloak
+            client-id: ${app.config.keycloak.client-id}
+            client-secret: ${app.config.keycloak.client-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:8080/login/oauth2/code/spring-cloud-gateway-client
+            scope: openid
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${app.config.keycloak.url}/realms/${app.config.keycloak.realm}/protocol/openid-connect/certs
+
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+        lower-case-service-id: true
+      default-filters: TokenRelay
+      routes:
+        - id: product-service
+          uri: lb://product
+          predicates: Path=/api/product/**
+        - id: order-service
+          uri: lb://order
+          predicates: Path=/api/order/**
+        - id: inventory-service
+          uri: lb://inventory
+          predicates: Path=/api/inventory/**
+        - id: authentication-service
+          uri: lb://authentication
+          predicates: Path=/api/authentication/**
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${random.uuid}
+    hostname: localhost
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    enabled: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+keycloak-client:
+  server-url: http://localhost:8180/auth
+  realm: your-realm

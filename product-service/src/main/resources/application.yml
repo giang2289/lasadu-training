@@ -1,0 +1,36 @@
+
+server:
+  port: 0
+management:
+  endpoints:
+    wed:
+      exposure:
+        include: "*"
+spring:
+  application:
+    name: product
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/product-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/auth/realms/microservices-realm
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${random.uuid}
+    hostname: localhost
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    enabled: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
